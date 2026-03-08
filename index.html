@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>OPAI Lua Script Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{
+    background:#0f0f0f;
+    color:white;
+    font-family:Arial;
+    text-align:center;
+}
+.box{
+    background:#1c1c1c;
+    padding:20px;
+    margin:20px;
+    border-radius:10px;
+}
+button{
+    padding:10px 20px;
+    border:none;
+    background:#00ff9d;
+    color:black;
+    border-radius:6px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>OPAI Lua Script Hub</h1>
+<p>Roblox Lua Script Library</p>
+
+<div class="box">
+<h2>ESP Script</h2>
+
+<pre>
+loadstring(game:HttpGet("你的脚本链接"))()
+</pre>
+
+<button onclick="copy()">Copy Script</button>
+
+</div>
+
+<script>
+function copy(){
+navigator.clipboard.writeText('loadstring(game:HttpGet("你的脚本链接"))()')
+alert("Script Copied")
+}
+</script>
+
+</body>
+</html>

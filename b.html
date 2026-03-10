@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINAL MONITOR | ROLLING LOG</title>
+    <title>DYNAMIC MONITOR | ROLLING LOG</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #000000;
             --text: #ffffff;
             --glow: 0 0 25px rgba(255, 255, 255, 0.4);
-            --font-mono: 'JetBrains Mono', monospace;
         }
 
         body {
             background-color: var(--bg);
             color: var(--text);
-            font-family: var(--font-mono);
+            font-family: 'JetBrains Mono', monospace;
             height: 100vh;
             display: flex;
             flex-direction: column;
@@ -43,27 +42,28 @@
             background: #333;
             border-radius: 50%;
             margin-right: 10px;
-            transition: 0.2s;
         }
 
         .active-pulse { background: #00ff88 !important; box-shadow: 0 0 12px #00ff88; }
 
-        /* 中心显示区域 */
+        /* 动态内容显示区域 */
         #output {
-            font-size: 180px;
+            font-size: 80px; /* 减小字号以适应更长的内容 */
             font-weight: 900;
             text-shadow: var(--glow);
+            text-align: center;
+            max-width: 90%;
+            word-break: break-all; /* 自动换行防止溢出 */
             opacity: 0;
-            transform: scale(0.9);
-            transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(20px);
+            transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         #output.visible {
             opacity: 1;
-            transform: scale(1);
+            transform: translateY(0);
         }
 
-        /* 重置按钮 (调试用) */
         .debug-clear {
             position: fixed;
             bottom: 30px;
@@ -75,29 +75,31 @@
             padding: 5px 10px;
             border-radius: 4px;
         }
-        .debug-clear:hover { opacity: 1; }
     </style>
 </head>
 <body>
 
     <div class="monitor-info">
-        <span id="status-light"></span> ROLLING_LOG_MONITOR_ACTIVE
-        <p id="time-display" style="margin-top:5px; font-size:8px;">FETCHING_DATA...</p>
+        <span id="status-light"></span> ROLLING_LOG_DYNAMIC_MONITOR
+        <p id="status-text" style="margin-top:5px; font-size:8px;">IDLE</p>
     </div>
 
-    <div id="output"></div>
+    <div id="output">WAITING...</div>
 
-    <div class="debug-clear" onclick="resetSignal()">Clear Signal</div>
+    <div class="debug-clear" onclick="resetSignal()">Reset Terminal</div>
 
     <script>
         const DB_URL = "https://rolling-log-965e2-default-rtdb.firebaseio.com/signal.json";
         const outputDiv = document.getElementById('output');
         const light = document.getElementById('status-light');
-        const timeDisplay = document.getElementById('time-display');
+        const statusText = document.getElementById('status-text');
+
+        // 上一次接收到的内容（用于避免重复刷新动画）
+        let lastContent = "";
 
         async function monitor() {
             setInterval(async () => {
-                // 视觉反馈：指示灯闪烁
+                // 指示灯闪烁
                 light.classList.add('active-pulse');
                 setTimeout(() => light.classList.remove('active-pulse'), 200);
 
@@ -105,32 +107,35 @@
                     const response = await fetch(DB_URL);
                     const data = await response.json();
 
-                    if (data && data.last_signal === 'A') {
-                        // 发现 A，显示 a
-                        outputDiv.innerText = 'a';
-                        outputDiv.classList.add('visible');
-                        timeDisplay.innerText = "SIGNAL_DETECTED: 'A'";
+                    // 核心逻辑：只要有信号且不是 IDLE，就显示出来
+                    if (data && data.last_signal && data.last_signal !== "IDLE") {
+                        const currentSignal = data.last_signal;
+                        
+                        // 只有当内容变化时才更新，防止动画一直闪烁
+                        if (currentSignal !== lastContent) {
+                            outputDiv.innerText = currentSignal;
+                            outputDiv.classList.add('visible');
+                            statusText.innerText = "DATA_RECEIVED: " + currentSignal;
+                            lastContent = currentSignal;
+                        }
                     } else {
-                        // 未发现信号
                         outputDiv.classList.remove('visible');
-                        timeDisplay.innerText = "STATUS: LISTENING_FOR_A";
+                        statusText.innerText = "STATUS: LISTENING_FOR_SIGNAL";
+                        lastContent = "";
                     }
                 } catch (err) {
-                    timeDisplay.innerText = "ERROR: CONNECTION_FAILED";
+                    statusText.innerText = "ERROR: OFFLINE";
                 }
-            }, 1000); // 1秒检查一次，反应更灵敏
+            }, 1000); 
         }
 
-        // 手动清除数据库信号的函数 (用于循环测试)
         async function resetSignal() {
             await fetch(DB_URL, {
                 method: 'PATCH',
                 body: JSON.stringify({ last_signal: "IDLE" })
             });
-            outputDiv.classList.remove('visible');
         }
 
-        // 启动监听
         monitor();
     </script>
 </body>

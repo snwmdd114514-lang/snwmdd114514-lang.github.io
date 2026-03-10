@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>后台控制 | ROLLING LOG SYSTEM</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-    <!-- 引入 Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
@@ -33,7 +32,7 @@
             background-image: radial-gradient(circle at 50% 50%, #111 0%, #000 70%);
         }
 
-        .container { width: 100%; max-width: 600px; padding: 20px; }
+        .container { width: 100%; max-width: 450px; padding: 20px; }
         .glass {
             background: var(--card);
             backdrop-filter: blur(25px);
@@ -42,80 +41,75 @@
             padding: 40px 30px;
         }
 
-        .ultra-bold { font-weight: 900; letter-spacing: -1px; text-transform: uppercase; text-align: center; }
+        .ultra-bold { font-weight: 900; letter-spacing: -1px; text-transform: uppercase; text-align: center; margin: 0; }
         
-        /* 登录部分 */
         #login-section { display: block; }
         .input-group { margin-bottom: 20px; }
         label { display: block; font-size: 10px; font-weight: 900; opacity: 0.4; margin-bottom: 8px; text-transform: uppercase; }
         input {
             width: 100%; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border);
-            border-radius: 12px; padding: 16px; color: #fff; font-family: var(--font-mono);
+            border-radius: 12px; padding: 16px; color: #fff; font-family: var(--font-mono); box-sizing: border-box;
         }
         .btn {
             background: #fff; color: #000; border: none; width: 100%; padding: 16px;
             border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s;
         }
-        .btn:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(255,255,255,0.2); }
 
-        /* 后台部分 */
+        /* 后台列表 */
         #admin-section { display: none; }
         .player-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px; padding: 15px; margin-top: 15px;
-            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.03);
+            border-radius: 15px; padding: 15px; margin-top: 15px;
             border: 1px solid var(--border);
         }
-        .player-info span { display: block; font-family: var(--font-mono); font-size: 14px; }
+        .player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .player-name { font-family: var(--font-mono); font-size: 14px; color: var(--success); }
+        .kick-controls { display: flex; gap: 10px; }
+        .reason-input { padding: 8px; font-size: 12px; flex-grow: 1; }
         .kick-btn {
-            background: var(--accent); color: white; border: none; padding: 8px 15px;
-            border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 12px;
-        }
-        .reason-input {
-            width: 120px; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
-            color: white; padding: 5px; border-radius: 4px; font-size: 12px; margin-right: 10px;
+            background: var(--accent); color: white; border: none; padding: 0 15px;
+            border-radius: 8px; font-weight: 800; cursor: pointer;
         }
 
         #toast {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: var(--accent); padding: 10px 20px; border-radius: 50px;
-            font-size: 12px; font-weight: 900; display: none;
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: var(--accent); padding: 10px 25px; border-radius: 50px;
+            font-size: 12px; font-weight: 900; display: none; z-index: 100;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- 登录框 -->
+        <!-- 登录界面 -->
         <div id="login-section" class="glass">
             <h1 class="ultra-bold">SYSTEM ACCESS</h1>
-            <p style="text-align:center; opacity:0.3; font-size:10px; margin-bottom:30px;">AUTHENTICATION REQUIRED</p>
+            <p style="text-align:center; opacity:0.3; font-size:10px; margin-bottom:30px; letter-spacing: 2px;">SECURE TERMINAL</p>
             <div class="input-group">
-                <label>Username</label>
-                <input type="text" id="username" placeholder="snmwdd">
+                <label>Identifier</label>
+                <input type="text" id="username" placeholder="Username" value="snmwdd">
             </div>
             <div class="input-group">
                 <label>Access Code</label>
-                <input type="password" id="password" placeholder="••••••••">
+                <input type="password" id="password" placeholder="Password">
             </div>
-            <button class="btn" onclick="handleLogin()">INITIALIZE LOGIN</button>
+            <button class="btn" onclick="handleLogin()">INITIALIZE</button>
         </div>
 
-        <!-- 管理后台 -->
+        <!-- 管理员控制台 -->
         <div id="admin-section" class="glass">
-            <h1 class="ultra-bold">TERMINAL DASHBOARD</h1>
-            <p style="text-align:center; color:var(--success); font-size:10px; margin-bottom:20px;">● DATABASE CONNECTED</p>
+            <h1 class="ultra-bold">TERMINAL</h1>
+            <p style="text-align:center; color:var(--success); font-size:10px; margin-bottom:20px;">ONLINE SESSION MONITOR</p>
             <div id="player-list">
-                <!-- 玩家列表会在这里动态生成 -->
-                <p style="text-align:center; opacity:0.5;">Waiting for players...</p>
+                <p style="text-align:center; opacity:0.3; font-size:12px;">Searching for active logs...</p>
             </div>
         </div>
     </div>
 
-    <div id="toast">INVALID CREDENTIALS</div>
+    <div id="toast">ACCESS DENIED</div>
 
     <script>
-        // Firebase 配置 (根据你的 URL)
+        // 配置你的 Firebase
         const firebaseConfig = {
             databaseURL: "https://rolling-log-965e2-default-rtdb.firebaseio.com"
         };
@@ -123,64 +117,65 @@
         const db = firebase.database();
 
         function handleLogin() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
 
-            if (user === 'snmwdd' && pass === 'snmwddLLL') {
+            if (u === 'snmwdd' && p === 'snmwddLLL') {
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('admin-section').style.display = 'block';
-                startMonitoring();
+                startLiveUpdate();
             } else {
-                const toast = document.getElementById('toast');
-                toast.style.display = 'block';
-                setTimeout(() => toast.style.display = 'none', 2000);
+                showToast("INVALID CREDENTIALS");
             }
         }
 
-        function startMonitoring() {
-            // 监听玩家数据节点
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 2500);
+        }
+
+        function startLiveUpdate() {
+            // 实时获取玩家列表
             db.ref('players').on('value', (snapshot) => {
+                const list = document.getElementById('player-list');
                 const players = snapshot.val();
-                const listContainer = document.getElementById('player-list');
-                listContainer.innerHTML = '';
+                list.innerHTML = '';
 
                 if (!players) {
-                    listContainer.innerHTML = '<p style="text-align:center; opacity:0.5;">No active sessions.</p>';
+                    list.innerHTML = '<p style="text-align:center; opacity:0.3; font-size:12px;">No players connected.</p>';
                     return;
                 }
 
-                for (let id in players) {
+                Object.keys(players).forEach(id => {
                     const p = players[id];
-                    // 如果玩家已经被踢出，可以选不显示或显示已踢出状态
-                    const statusColor = p.action === 'kick' ? '#ff4444' : '#00ff88';
-                    
-                    const div = document.createElement('div');
-                    div.className = 'player-card';
-                    div.innerHTML = `
-                        <div class="player-info">
-                            <span style="color:${statusColor}">ID: ${p.name}</span>
-                            <span style="font-size:10px; opacity:0.5;">Status: ${p.action || 'Online'}</span>
+                    const card = document.createElement('div');
+                    card.className = 'player-card';
+                    card.innerHTML = `
+                        <div class="player-header">
+                            <span class="player-name">USER: ${p.name}</span>
+                            <span style="font-size:9px; opacity:0.4;">ID: ${p.userId}</span>
                         </div>
-                        <div>
-                            <input type="text" class="reason-input" id="reason-${id}" placeholder="Reason...">
-                            <button class="kick-btn" onclick="kickPlayer('${id}')">KICK</button>
+                        <div class="kick-controls">
+                            <input type="text" class="reason-input" id="res-${id}" placeholder="Reason for kick...">
+                            <button class="kick-btn" onclick="sendKick('${id}')">KICK</button>
                         </div>
                     `;
-                    listContainer.appendChild(div);
-                }
+                    list.appendChild(card);
+                });
             });
         }
 
-        function kickPlayer(playerId) {
-            const reason = document.getElementById(`reason-${playerId}`).value || "Administrator Decision";
-            // 更新数据库，通知脚本
-            db.ref('players/' + playerId).update({
+        function sendKick(name) {
+            const reason = document.getElementById('res-' + name).value || "Administrative action";
+            db.ref('players/' + name).update({
                 action: 'kick',
                 reason: reason
             }).then(() => {
-                console.log("Kick command sent for " + playerId);
+                showToast("KICK COMMAND SENT");
             });
         }
     </script>
 </body>
-</html
+</html>

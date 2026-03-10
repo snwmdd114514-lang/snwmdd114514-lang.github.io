@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>后台控制 | ROLLING LOG SYSTEM</title>
+    <title>高级管理后台 | ROLLING LOG SYSTEM</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -15,67 +15,31 @@
             --text: #ffffff;
             --accent: #ff4444;
             --success: #00ff88;
+            --warning: #ffcc00;
             --radius-main: 22px;
             --font-main: 'Inter', sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: var(--font-main);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            background-image: radial-gradient(circle at 50% 50%, #111 0%, #000 70%);
-        }
-
-        .container { width: 100%; max-width: 450px; padding: 20px; }
-        .glass {
-            background: var(--card);
-            backdrop-filter: blur(25px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-main);
-            padding: 40px 30px;
-        }
-
+        body { background-color: var(--bg); color: var(--text); font-family: var(--font-main); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background-image: radial-gradient(circle at 50% 50%, #111 0%, #000 70%); }
+        .container { width: 100%; max-width: 600px; padding: 20px; }
+        .glass { background: var(--card); backdrop-filter: blur(25px); border: 1px solid var(--border); border-radius: var(--radius-main); padding: 40px 30px; position: relative; }
         .ultra-bold { font-weight: 900; letter-spacing: -1px; text-transform: uppercase; text-align: center; margin: 0; }
         
-        #login-section { display: block; }
+        #admin-section { display: none; }
+        .player-card { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); transition: 0.3s; }
+        .player-info span { display: block; font-family: var(--font-mono); font-size: 14px; }
+        .kick-btn { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 11px; }
+        .reason-input { width: 120px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; padding: 5px; border-radius: 4px; font-size: 12px; margin-right: 10px; }
+        
+        /* 登录样式 */
         .input-group { margin-bottom: 20px; }
         label { display: block; font-size: 10px; font-weight: 900; opacity: 0.4; margin-bottom: 8px; text-transform: uppercase; }
-        input {
-            width: 100%; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border);
-            border-radius: 12px; padding: 16px; color: #fff; font-family: var(--font-mono); box-sizing: border-box;
-        }
-        .btn {
-            background: #fff; color: #000; border: none; width: 100%; padding: 16px;
-            border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s;
-        }
+        input { width: 100%; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 12px; padding: 16px; color: #fff; box-sizing: border-box; }
+        .btn { background: #fff; color: #000; border: none; width: 100%; padding: 16px; border-radius: 12px; font-weight: 900; cursor: pointer; }
 
-        /* 后台列表 */
-        #admin-section { display: none; }
-        .player-card {
-            background: rgba(255,255,255,0.03);
-            border-radius: 15px; padding: 15px; margin-top: 15px;
-            border: 1px solid var(--border);
-        }
-        .player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .player-name { font-family: var(--font-mono); font-size: 14px; color: var(--success); }
-        .kick-controls { display: flex; gap: 10px; }
-        .reason-input { padding: 8px; font-size: 12px; flex-grow: 1; }
-        .kick-btn {
-            background: var(--accent); color: white; border: none; padding: 0 15px;
-            border-radius: 8px; font-weight: 800; cursor: pointer;
-        }
-
-        #toast {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: var(--accent); padding: 10px 25px; border-radius: 50px;
-            font-size: 12px; font-weight: 900; display: none; z-index: 100;
-        }
+        .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent); padding: 10px 20px; border-radius: 50px; font-size: 12px; font-weight: 900; display: none; }
     </style>
 </head>
 <body>
@@ -84,97 +48,96 @@
         <!-- 登录界面 -->
         <div id="login-section" class="glass">
             <h1 class="ultra-bold">SYSTEM ACCESS</h1>
-            <p style="text-align:center; opacity:0.3; font-size:10px; margin-bottom:30px; letter-spacing: 2px;">SECURE TERMINAL</p>
+            <p style="text-align:center; opacity:0.3; font-size:10px; margin-bottom:30px;">SECURE TERMINAL</p>
             <div class="input-group">
-                <label>Identifier</label>
-                <input type="text" id="username" placeholder="Username" value="snmwdd">
+                <label>Username</label>
+                <input type="text" id="username" placeholder="snmwdd">
             </div>
             <div class="input-group">
                 <label>Access Code</label>
-                <input type="password" id="password" placeholder="Password">
+                <input type="password" id="password" placeholder="••••••••">
             </div>
             <button class="btn" onclick="handleLogin()">INITIALIZE</button>
         </div>
 
-        <!-- 管理员控制台 -->
+        <!-- 管理后台 -->
         <div id="admin-section" class="glass">
-            <h1 class="ultra-bold">TERMINAL</h1>
-            <p style="text-align:center; color:var(--success); font-size:10px; margin-bottom:20px;">ONLINE SESSION MONITOR</p>
-            <div id="player-list">
-                <p style="text-align:center; opacity:0.3; font-size:12px;">Searching for active logs...</p>
-            </div>
+            <h1 class="ultra-bold">REALTIME MONITOR</h1>
+            <p id="db-status" style="text-align:center; color:var(--success); font-size:10px; margin-bottom:20px;">● CONNECTED</p>
+            <div id="player-list"></div>
         </div>
     </div>
 
-    <div id="toast">ACCESS DENIED</div>
+    <div id="toast">ERROR</div>
 
     <script>
-        // 配置你的 Firebase
-        const firebaseConfig = {
-            databaseURL: "https://rolling-log-965e2-default-rtdb.firebaseio.com"
-        };
+        const firebaseConfig = { databaseURL: "https://rolling-log-965e2-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        let cachedPlayers = {};
 
         function handleLogin() {
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-
-            if (u === 'snmwdd' && p === 'snmwddLLL') {
+            if (document.getElementById('username').value === 'snmwdd' && document.getElementById('password').value === 'snmwddLLL') {
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('admin-section').style.display = 'block';
-                startLiveUpdate();
-            } else {
-                showToast("INVALID CREDENTIALS");
+                startMonitoring();
             }
         }
 
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.innerText = msg;
-            t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 2500);
-        }
-
-        function startLiveUpdate() {
-            // 实时获取玩家列表
+        function startMonitoring() {
+            // 实时监听数据库
             db.ref('players').on('value', (snapshot) => {
-                const list = document.getElementById('player-list');
-                const players = snapshot.val();
-                list.innerHTML = '';
+                cachedPlayers = snapshot.val() || {};
+                renderList();
+            });
 
-                if (!players) {
-                    list.innerHTML = '<p style="text-align:center; opacity:0.3; font-size:12px;">No players connected.</p>';
-                    return;
+            // 核心功能：心跳垃圾回收 (GC)
+            // 每 2 秒检查一次，如果玩家心跳超过 10 秒没更新，则视为离线，自动删除
+            setInterval(() => {
+                const now = Math.floor(Date.now() / 1000); // 转换为秒
+                for (let id in cachedPlayers) {
+                    const p = cachedPlayers[id];
+                    // 检查 lastHeartbeat 字段
+                    if (p.lastHeartbeat && (now - p.lastHeartbeat > 10)) {
+                        console.log(`[GC] Player ${id} timed out. Deleting...`);
+                        db.ref('players/' + id).remove();
+                    }
                 }
+            }, 2000);
+        }
 
-                Object.keys(players).forEach(id => {
-                    const p = players[id];
-                    const card = document.createElement('div');
-                    card.className = 'player-card';
-                    card.innerHTML = `
-                        <div class="player-header">
-                            <span class="player-name">USER: ${p.name}</span>
-                            <span style="font-size:9px; opacity:0.4;">ID: ${p.userId}</span>
-                        </div>
-                        <div class="kick-controls">
-                            <input type="text" class="reason-input" id="res-${id}" placeholder="Reason for kick...">
-                            <button class="kick-btn" onclick="sendKick('${id}')">KICK</button>
-                        </div>
-                    `;
-                    list.appendChild(card);
-                });
+        function renderList() {
+            const listContainer = document.getElementById('player-list');
+            listContainer.innerHTML = '';
+            
+            const keys = Object.keys(cachedPlayers);
+            if (keys.length === 0) {
+                listContainer.innerHTML = '<p style="text-align:center; opacity:0.3;">NO ACTIVE SESSIONS</p>';
+                return;
+            }
+
+            keys.forEach(id => {
+                const p = cachedPlayers[id];
+                const isKicked = p.action === 'kick';
+                const div = document.createElement('div');
+                div.className = 'player-card';
+                div.innerHTML = `
+                    <div class="player-info">
+                        <span><b style="color:var(--success)">●</b> ${p.name}</span>
+                        <span style="font-size:9px; opacity:0.5;">LAST PULSE: ${p.lastHeartbeat}</span>
+                    </div>
+                    <div>
+                        <input type="text" class="reason-input" id="reason-${id}" placeholder="Reason...">
+                        <button class="kick-btn" onclick="kickPlayer('${id}')">KICK</button>
+                    </div>
+                `;
+                listContainer.appendChild(div);
             });
         }
 
-        function sendKick(name) {
-            const reason = document.getElementById('res-' + name).value || "Administrative action";
-            db.ref('players/' + name).update({
-                action: 'kick',
-                reason: reason
-            }).then(() => {
-                showToast("KICK COMMAND SENT");
-            });
+        function kickPlayer(playerId) {
+            const reason = document.getElementById(`reason-${playerId}`).value || "Admin Action";
+            db.ref('players/' + playerId).update({ action: 'kick', reason: reason });
         }
     </script>
 </body>

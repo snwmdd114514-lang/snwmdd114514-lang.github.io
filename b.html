@@ -3,41 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RECEIVER | ROLLING LOG</title>
+    <title>TERMINAL MONITOR | ROLLING LOG</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #000000;
             --text: #ffffff;
-            --glow: 0 0 20px rgba(255, 255, 255, 0.5);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            --glow: 0 0 25px rgba(255, 255, 255, 0.4);
+            --font-mono: 'JetBrains Mono', monospace;
         }
 
         body {
             background-color: var(--bg);
             color: var(--text);
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-mono);
             height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #111 0%, #000 70%);
         }
 
-        /* 原味显示样式 */
+        /* 顶部状态栏 */
+        .monitor-info {
+            position: fixed;
+            top: 30px;
+            font-size: 10px;
+            letter-spacing: 2px;
+            opacity: 0.4;
+            text-align: center;
+        }
+
+        #status-light {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            background: #333;
+            border-radius: 50%;
+            margin-right: 10px;
+            transition: 0.2s;
+        }
+
+        .active-pulse { background: #00ff88 !important; box-shadow: 0 0 12px #00ff88; }
+
+        /* 中心显示区域 */
         #output {
-            font-size: 150px;
-            font-weight: 800;
-            text-transform: lowercase; /* 确保显示为小写 a */
+            font-size: 180px;
+            font-weight: 900;
             text-shadow: var(--glow);
             opacity: 0;
-            transform: scale(0.8);
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: scale(0.9);
+            transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         #output.visible {
@@ -45,45 +63,75 @@
             transform: scale(1);
         }
 
-        /* 状态装饰 */
-        .status-dot {
+        /* 重置按钮 (调试用) */
+        .debug-clear {
             position: fixed;
-            top: 20px;
-            left: 20px;
-            font-size: 10px;
-            letter-spacing: 2px;
-            opacity: 0.3;
+            bottom: 30px;
+            font-size: 9px;
+            opacity: 0.2;
+            cursor: pointer;
+            text-transform: uppercase;
+            border: 1px solid #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
         }
+        .debug-clear:hover { opacity: 1; }
     </style>
 </head>
 <body>
 
-    <div class="status-dot">SIGNAL_RECEIVER_V5.0</div>
+    <div class="monitor-info">
+        <span id="status-light"></span> ROLLING_LOG_MONITOR_ACTIVE
+        <p id="time-display" style="margin-top:5px; font-size:8px;">FETCHING_DATA...</p>
+    </div>
 
-    <!-- 用于显示 a 的容器 -->
     <div id="output"></div>
 
+    <div class="debug-clear" onclick="resetSignal()">Clear Signal</div>
+
     <script>
-        window.onload = function() {
-            // 获取 URL 参数
-            const urlParams = new URLSearchParams(window.location.search);
-            const payload = urlParams.get('payload'); // 寻找 ?payload=...
+        const DB_URL = "https://rolling-log-965e2-default-rtdb.firebaseio.com/signal.json";
+        const outputDiv = document.getElementById('output');
+        const light = document.getElementById('status-light');
+        const timeDisplay = document.getElementById('time-display');
 
-            const display = document.getElementById('output');
+        async function monitor() {
+            setInterval(async () => {
+                // 视觉反馈：指示灯闪烁
+                light.classList.add('active-pulse');
+                setTimeout(() => light.classList.remove('active-pulse'), 200);
 
-            // 如果接收到的参数是 "A"
-            if (payload === 'A') {
-                display.innerText = 'a';
-                
-                // 延迟一秒显示动画效果，增加科技感
-                setTimeout(() => {
-                    display.classList.add('visible');
-                }, 100);
-            } else {
-                // 如果没有 A，显示一个静默状态
-                console.log("Waiting for signal 'A'...");
-            }
-        };
+                try {
+                    const response = await fetch(DB_URL);
+                    const data = await response.json();
+
+                    if (data && data.last_signal === 'A') {
+                        // 发现 A，显示 a
+                        outputDiv.innerText = 'a';
+                        outputDiv.classList.add('visible');
+                        timeDisplay.innerText = "SIGNAL_DETECTED: 'A'";
+                    } else {
+                        // 未发现信号
+                        outputDiv.classList.remove('visible');
+                        timeDisplay.innerText = "STATUS: LISTENING_FOR_A";
+                    }
+                } catch (err) {
+                    timeDisplay.innerText = "ERROR: CONNECTION_FAILED";
+                }
+            }, 1000); // 1秒检查一次，反应更灵敏
+        }
+
+        // 手动清除数据库信号的函数 (用于循环测试)
+        async function resetSignal() {
+            await fetch(DB_URL, {
+                method: 'PATCH',
+                body: JSON.stringify({ last_signal: "IDLE" })
+            });
+            outputDiv.classList.remove('visible');
+        }
+
+        // 启动监听
+        monitor();
     </script>
 </body>
 </html>

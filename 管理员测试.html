@@ -8,16 +8,31 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        :root { --bg: #000; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08); --text: #fff; --accent: #ff4444; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .glass { background: var(--card); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 20px; padding: 40px; width: 400px; }
-        .ultra-bold { font-weight: 900; text-transform: uppercase; text-align: center; letter-spacing: -1px; }
+        :root { --bg: #000; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08); --text: #fff; --accent: #ff4444; --success: #00ff88; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        .glass { background: var(--card); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 20px; padding: 40px; width: 400px; position: relative; }
+        .ultra-bold { font-weight: 900; text-transform: uppercase; text-align: center; letter-spacing: -1px; margin-top: 0; }
         input { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: #fff; margin-bottom: 15px; box-sizing: border-box; }
         .btn { background: #fff; color: #000; border: none; width: 100%; padding: 12px; border-radius: 10px; font-weight: 900; cursor: pointer; }
+        
+        /* 玩家卡片 */
         .player-card { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
         .kick-btn { background: var(--accent); color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: 900; }
         .reason-input { width: 80px; margin-bottom: 0; padding: 5px; font-size: 11px; }
         .pulse-text { font-size: 9px; opacity: 0.5; display: block; font-family: 'JetBrains Mono'; }
+
+        /* 历史记录按钮 */
+        .history-trigger { position: absolute; top: 20px; right: 20px; background: none; border: 1px solid var(--border); color: #777; padding: 5px 10px; border-radius: 5px; font-size: 10px; font-weight: 900; cursor: pointer; transition: 0.3s; }
+        .history-trigger:hover { color: #fff; border-color: #fff; }
+
+        /* 历史记录面板 */
+        #history-panel { position: fixed; right: -350px; top: 0; width: 300px; height: 100%; background: rgba(10,10,10,0.95); border-left: 1px solid var(--border); padding: 20px; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 100; overflow-y: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
+        #history-panel.active { right: 0; }
+        .history-item { font-size: 11px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: 'JetBrains Mono'; }
+        .history-time { color: #555; display: block; font-size: 9px; margin-bottom: 3px; }
+        .h-tag { padding: 2px 4px; border-radius: 3px; font-size: 8px; font-weight: 900; margin-right: 5px; }
+        .tag-join { background: var(--success); color: #000; }
+        .tag-kick { background: var(--accent); color: #fff; }
     </style>
 </head>
 <body>
@@ -27,78 +42,116 @@
         <input type="password" id="password" placeholder="Pass">
         <button class="btn" onclick="login()">Access</button>
     </div>
+
     <div id="admin-section" class="glass" style="display:none">
+        <button class="history-trigger" onclick="toggleHistory()">HISTORY</button>
         <h1 class="ultra-bold">Monitor</h1>
         <div id="player-list"></div>
     </div>
+
+    <div id="history-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="font-size:14px; margin:0; font-weight:900;">ACTIVITY LOG</h2>
+            <button onclick="toggleHistory()" style="background:none; border:none; color:#fff; cursor:pointer;">✕</button>
+        </div>
+        <div id="history-list"></div>
+    </div>
+
     <script>
         const conf = { databaseURL: "https://rolling-log-965e2-default-rtdb.firebaseio.com" };
         firebase.initializeApp(conf);
         const db = firebase.database();
         let players = {};
+        let loggedJoin = new Set(); // 记录本次打开页面已记录过的“加入”玩家
 
         function login(){
             if(document.getElementById('username').value==='snmwdd' && document.getElementById('password').value==='snmwddLLL'){
                 document.getElementById('login-section').style.display='none';
                 document.getElementById('admin-section').style.display='block';
                 
+                // 监听实时玩家
                 db.ref('players').on('value', s => { 
                     players = s.val() || {}; 
+                    checkAndLogJoin();
                     render(); 
                 });
 
+                // 监听历史记录
+                db.ref('history').limitToLast(50).on('value', s => {
+                    renderHistory(s.val());
+                });
+
+                // 心跳清理
                 setInterval(() => {
                     const now = Math.floor(Date.now()/1000);
-                    for(let id in players) {
-                        if(players[id].lastHeartbeat && (now - players[id].lastHeartbeat > 10)) {
-                            db.ref('players/'+id).remove();
-                        }
-                    }
+                    for(let id in players) if(players[id].lastHeartbeat && (now - players[id].lastHeartbeat > 10)) db.ref('players/'+id).remove();
                 }, 2000);
             }
         }
 
-        function render(){
-            const container = document.getElementById('player-list');
-            
-            // 1. 删除已经离线的玩家 DOM
-            Array.from(container.children).forEach(child => {
-                const id = child.id.replace('card-', '');
-                if (!players[id]) child.remove();
+        // 记录历史记录函数
+        function addHistory(name, type, detail = "") {
+            db.ref('history').push({
+                name: name,
+                type: type,
+                detail: detail,
+                timestamp: Date.now()
             });
+        }
 
-            // 2. 增加或更新玩家 DOM
-            for(let id in players){
-                const p = players[id];
-                let card = document.getElementById('card-' + id);
-                
-                if (!card) {
-                    // 只在玩家新加入时创建 DOM 结构
-                    card = document.createElement('div');
-                    card.id = 'card-' + id;
-                    card.className = 'player-card';
-                    card.innerHTML = `
-                        <div>
-                            <span style="font-weight:800">${p.name}</span>
-                            <span class="pulse-text" id="pulse-${id}">Pulse: --</span>
-                        </div>
-                        <div>
-                            <input class="reason-input" id="r-${id}" placeholder="Reason">
-                            <button class="kick-btn" onclick="kick('${id}')">KICK</button>
-                        </div>
-                    `;
-                    container.appendChild(card);
+        function checkAndLogJoin() {
+            for(let id in players) {
+                if(!loggedJoin.has(id)) {
+                    addHistory(players[id].name, "JOIN");
+                    loggedJoin.add(id);
                 }
-                
-                // 仅更新心跳时间文字，不会影响输入框
-                const pulseElem = document.getElementById(`pulse-${id}`);
-                if (pulseElem) pulseElem.innerText = `Pulse: ${p.lastHeartbeat}`;
             }
         }
 
+        function toggleHistory() {
+            document.getElementById('history-panel').classList.toggle('active');
+        }
+
+        function render() {
+            const container = document.getElementById('player-list');
+            Array.from(container.children).forEach(c => { if(!players[c.id.replace('card-','')]) c.remove(); });
+            for(let id in players){
+                let card = document.getElementById('card-'+id);
+                if(!card){
+                    card = document.createElement('div');
+                    card.id = 'card-'+id; card.className = 'player-card';
+                    card.innerHTML = `<div><span style="font-weight:800">${players[id].name}</span><span class="pulse-text" id="pulse-${id}">Pulse: --</span></div><div><input class="reason-input" id="r-${id}" placeholder="Reason"><button class="kick-btn" onclick="kick('${id}')">KICK</button></div>`;
+                    container.appendChild(card);
+                }
+                document.getElementById(`pulse-${id}`).innerText = `Pulse: ${players[id].lastHeartbeat}`;
+            }
+        }
+
+        function renderHistory(data) {
+            const list = document.getElementById('history-list');
+            list.innerHTML = '';
+            if(!data) return;
+            const items = Object.values(data).reverse(); // 最新的在上面
+            items.forEach(item => {
+                const date = new Date(item.timestamp).toLocaleString();
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                const tagClass = item.type === "JOIN" ? "tag-join" : "tag-kick";
+                div.innerHTML = `
+                    <span class="history-time">${date}</span>
+                    <span class="h-tag ${tagClass}">${item.type}</span>
+                    <span style="color:#eee">${item.name}</span>
+                    ${item.detail ? `<span style="color:#777; font-size:9px; display:block; margin-top:3px;">> ${item.detail}</span>` : ''}
+                `;
+                list.appendChild(div);
+            });
+        }
+
         function kick(id){
+            const name = players[id].name;
             const r = document.getElementById('r-'+id).value || "Violation";
             db.ref('players/'+id).update({ action: 'kick', reason: r });
+            addHistory(name, "KICK", r);
         }
     </script>
 </body>

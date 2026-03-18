@@ -3,41 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MULTI-SERVER MONITOR</title>
+    <title>SYSTEM ACCESS - MULTI SERVER</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        :root { --bg: #000; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08); --text: #fff; --accent: #ff4444; --success: #00ff88; --blue: #00bcff; }
+        :root { --bg: #000; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08); --text: #fff; --accent: #ff4444; --success: #00ff88; --blue: #00d9ff; }
         * { touch-action: pan-y; box-sizing: border-box; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; background-image: radial-gradient(circle at 50% 50%, #111 0%, #000 70%); padding-top: 50px; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow: hidden; background-image: radial-gradient(circle at 50% 50%, #111 0%, #000 70%); }
         
-        .glass { background: var(--card); backdrop-filter: blur(25px); border: 1px solid var(--border); border-radius: 20px; padding: 30px; width: 95%; max-width: 500px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); margin-bottom: 20px; }
+        .glass { background: var(--card); backdrop-filter: blur(25px); border: 1px solid var(--border); border-radius: 20px; padding: 30px; width: 95%; max-width: 450px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
         .ultra-bold { font-weight: 900; text-transform: uppercase; text-align: center; letter-spacing: -1px; margin-bottom: 20px; }
-        
-        /* 服务器区块样式 */
-        .server-section { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 15px; padding: 15px; margin-bottom: 20px; }
-        .server-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
-        .server-name { color: var(--blue); font-weight: 900; font-size: 14px; text-transform: uppercase; }
-        
         input { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: #fff; margin-bottom: 15px; font-family: 'JetBrains Mono'; }
         .btn { background: #fff; color: #000; border: none; width: 100%; padding: 12px; border-radius: 10px; font-weight: 900; cursor: pointer; }
 
-        .player-card { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 10px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
-        .kick-btn { background: var(--accent); color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 900; }
-        .reason-input { width: 80px; margin-bottom: 0; padding: 5px; font-size: 10px; background: #000; }
+        /* 统计栏 */
+        .stats-bar { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; font-size: 10px; font-weight: 900; color: #666; position: sticky; top: 0; background: rgba(0,0,0,0.2); padding: 5px; z-index: 10; }
+        .stats-item b { color: var(--success); }
 
-        .history-trigger { position: fixed; top: 15px; right: 15px; background: rgba(0,0,0,0.6); border: 1px solid var(--border); color: #fff; padding: 8px 15px; border-radius: 5px; font-size: 11px; font-weight: 900; cursor: pointer; z-index: 100; }
+        /* 服务器分类区块 */
+        .server-block { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px; }
+        .server-title { font-size: 11px; font-weight: 900; color: var(--blue); text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; }
 
+        /* 玩家卡片 */
+        .player-card { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
+        .kick-btn { background: var(--accent); color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 900; }
+        .reason-input { width: 90px; margin-bottom: 0; padding: 6px; font-size: 11px; background: #000; }
+
+        .history-trigger { position: absolute; top: 15px; right: 15px; background: none; border: 1px solid var(--border); color: #777; padding: 5px 10px; border-radius: 5px; font-size: 9px; font-weight: 900; cursor: pointer; }
+
+        /* 浮窗系统 */
         #history-window { 
-            position: fixed; top: 70px; right: 20px; width: 320px; max-width: 90vw; max-height: 70vh; 
+            position: fixed; top: 20px; right: 20px; width: 320px; max-width: 90vw; max-height: 70vh; 
             background: rgba(10,10,10,0.95); border: 1px solid var(--border); border-radius: 15px; 
             display: none; flex-direction: column; z-index: 1000; box-shadow: 0 30px 60px rgba(0,0,0,0.8);
         }
-        .win-header { padding: 15px; background: rgba(255,255,255,0.03); cursor: move; display: flex; justify-content: space-between; align-items: center; }
+        .win-header { padding: 15px; background: rgba(255,255,255,0.03); cursor: move; touch-action: none; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
         .win-content { padding: 15px; overflow-y: auto; flex: 1; }
-        .history-item { font-size: 11px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-family: 'JetBrains Mono'; }
-        .tag-server { color: var(--blue); font-size: 9px; margin-right: 5px; }
+        
+        .history-item { font-size: 11px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-family: 'JetBrains Mono'; }
+        .h-time { color: #555; font-size: 9px; display: block; }
+        .h-tag { padding: 2px 5px; border-radius: 3px; font-size: 8px; font-weight: 900; margin-right: 5px; }
+        .tag-join { background: var(--success); color: #000; }
+        .tag-kick { background: var(--accent); color: #fff; }
+        .user-item { font-size: 10px; color: #555; padding: 2px 0; }
     </style>
 </head>
 <body>
@@ -50,96 +59,128 @@
     </div>
 
     <div id="admin-section" class="glass" style="display:none">
-        <button class="history-trigger" onclick="toggleWindow()">GLOBAL LOGS</button>
-        <h1 class="ultra-bold">Network Monitor</h1>
+        <button class="history-trigger" onclick="toggleWindow()">LOGS / DIR</button>
+        <h1 class="ultra-bold">Monitor</h1>
         
-        <!-- 服务器列表容器 -->
-        <div id="server-container">
-            <div style="text-align:center; opacity:0.5; font-size:12px;">Waiting for server data...</div>
+        <div class="stats-bar">
+            <div class="stats-item">GLOBAL LIVE: <b id="stat-online">0</b></div>
+            <div class="stats-item">TOTAL USERS: <b id="stat-total">0</b></div>
         </div>
+
+        <!-- 服务器列表动态生成 -->
+        <div id="server-lists-container"></div>
     </div>
 
+    <!-- 侧边历史和用户窗口 -->
     <div id="history-window">
         <div class="win-header" id="drag-handle">
-            <span style="font-size:11px; font-weight:900;">SYSTEM LOGS</span>
-            <button onclick="toggleWindow()" style="background:none; border:none; color:#fff; cursor:pointer;">✕</button>
+            <span style="font-size:11px; font-weight:900;">SYSTEM LOGS & DIRECTORY</span>
+            <button onclick="toggleWindow()" style="background:none; border:none; color:#fff; cursor:pointer; padding:5px;">✕</button>
         </div>
-        <div class="win-content" id="history-list"></div>
+        <div class="win-content">
+            <div id="history-list"></div>
+            <div style="margin-top:20px; border-top:1px solid #222; padding-top:10px;">
+                <span style="font-size:9px; font-weight:900; color:#444;">ALL REGISTERED USERS</span>
+                <div id="all-users-list"></div>
+            </div>
+        </div>
     </div>
 
     <script>
         const conf = { databaseURL: "https://rolling-log-965e2-default-rtdb.firebaseio.com" };
         firebase.initializeApp(conf);
         const db = firebase.database();
+        let tracked = new Set(); // 用于追踪加入日志
+
+        function formatTime(ts) {
+            const d = new Date(ts);
+            const p = (n) => n.toString().padStart(2, '0');
+            return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+        }
 
         function login(){
             if(document.getElementById('username').value==='snmwdd' && document.getElementById('password').value==='snmwddLLL'){
                 document.getElementById('login-section').style.display='none';
                 document.getElementById('admin-section').style.display='block';
-                startMonitoring();
+                start();
                 makeDraggable(document.getElementById("history-window"), document.getElementById("drag-handle"));
             }
         }
 
-        function startMonitoring() {
-            // 监听整个 servers 节点
-            db.ref('servers').on('value', snapshot => {
-                const servers = snapshot.val() || {};
+        function start() {
+            // 监听所有服务器数据
+            db.ref('servers').on('value', s => {
+                const servers = s.val() || {};
                 renderServers(servers);
             });
 
-            // 监听全局历史记录
+            // 监听所有曾用过脚本的用户
+            db.ref('users').on('value', s => { 
+                const allUsers = s.val() || {}; 
+                document.getElementById('stat-total').innerText = Object.keys(allUsers).length;
+                const l = document.getElementById('all-users-list');
+                l.innerHTML = ''; 
+                Object.keys(allUsers).forEach(u => l.innerHTML += `<div class="user-item">> ${u}</div>`);
+            });
+
+            // 监听历史记录
             db.ref('history').limitToLast(30).on('value', s => {
                 const list = document.getElementById('history-list');
-                list.innerHTML = ''; 
-                if(!s.val()) return;
+                list.innerHTML = ''; if(!s.val()) return;
                 Object.values(s.val()).reverse().forEach(item => {
                     list.innerHTML += `
                         <div class="history-item">
-                            <span style="color:#555">[${new Date(item.ts).toLocaleTimeString()}]</span>
-                            <span class="tag-server">${item.server || 'UNK'}</span>
-                            <b>${item.name}</b> 
-                            <span style="color:${item.type==='JOIN'?'#00ff88':'#ff4444'}">${item.type}</span>
+                            <span class="h-time">${formatTime(item.ts)} [${item.server || '?'}]</span>
+                            <span class="h-tag ${item.type==="JOIN"?"tag-join":"tag-kick"}">${item.type}</span>
+                            <b>${item.name}</b>
+                            ${item.detail?`<div style="color:#ffaa00;font-size:9px;margin-top:2px;">${item.detail}</div>`:''}
                         </div>`;
                 });
             });
 
-            // 心跳检查：清理掉线的玩家
+            // 心跳清理逻辑 (全局遍历)
             setInterval(() => {
                 const now = Math.floor(Date.now()/1000);
                 db.ref('servers').once('value', s => {
-                    const data = s.val();
-                    for(let sName in data){
-                        for(let pName in data[sName].players){
-                            const p = data[sName].players[pName];
-                            if(p.lastHeartbeat && (now - p.lastHeartbeat > 15)){
+                    const servers = s.val() || {};
+                    for(let sName in servers) {
+                        for(let pName in servers[sName].players) {
+                            const p = servers[sName].players[pName];
+                            if(p.lastHeartbeat && (now - p.lastHeartbeat > 12)) {
                                 db.ref(`servers/${sName}/players/${pName}`).remove();
                             }
                         }
                     }
                 });
-            }, 5000);
+            }, 3000);
         }
 
         function renderServers(servers) {
-            const container = document.getElementById('server-container');
+            const container = document.getElementById('server-lists-container');
             container.innerHTML = '';
+            let totalOnline = 0;
 
             for (let sName in servers) {
                 const players = servers[sName].players || {};
                 const pCount = Object.keys(players).length;
-                if(pCount === 0) continue; // 如果没玩家就不显示该服务器
+                if(pCount === 0) continue; 
+                totalOnline += pCount;
 
-                const section = document.createElement('div');
-                section.className = 'server-section';
+                const serverBlock = document.createElement('div');
+                serverBlock.className = 'server-block';
                 
-                let playerHtml = '';
+                let playersHtml = '';
                 for (let pName in players) {
-                    playerHtml += `
+                    const pData = players[pName];
+                    
+                    // 记录新用户和加入日志
+                    checkNewUser(pName, sName);
+
+                    playersHtml += `
                         <div class="player-card">
                             <div>
                                 <span style="font-weight:800;font-size:13px;">${pName}</span>
-                                <span style="font-size:9px;opacity:0.4;display:block;">Online</span>
+                                <span style="font-size:9px;opacity:0.4;display:block;">Pulse: ${pData.lastHeartbeat}</span>
                             </div>
                             <div>
                                 <input class="reason-input" id="r-${sName}-${pName}" placeholder="Reason">
@@ -148,32 +189,35 @@
                         </div>`;
                 }
 
-                section.innerHTML = `
-                    <div class="server-header">
-                        <span class="server-name"># ${sName}</span>
-                        <span style="font-size:10px; font-weight:900;">ONLINE: ${pCount}</span>
+                serverBlock.innerHTML = `
+                    <div class="server-title">
+                        <span>SERVER: ${sName}</span>
+                        <span>ONLINE: ${pCount}</span>
                     </div>
-                    ${playerHtml}
+                    ${playersHtml}
                 `;
-                container.appendChild(section);
+                container.appendChild(serverBlock);
+            }
+            document.getElementById('stat-online').innerText = totalOnline;
+        }
+
+        function checkNewUser(name, server) {
+            // 写入曾用用户库
+            db.ref('users/' + name).once('value', s => {
+                if(!s.exists()) db.ref('users/' + name).set({name: name, firstSeen: Date.now()});
+            });
+            // 写入加入日志 (每个会话只记录一次)
+            const trackId = name + "_" + server;
+            if(!tracked.has(trackId)) {
+                db.ref('history').push({name: name, server: server, type: "JOIN", ts: Date.now()});
+                tracked.add(trackId);
             }
         }
 
         function kick(sName, pName) {
-            const reason = document.getElementById(`r-${sName}-${pName}`).value || "Policy Violation";
-            // 发送踢出指令到特定服务器下的玩家
-            db.ref(`servers/${sName}/players/${pName}`).update({
-                action: 'kick',
-                reason: reason
-            });
-            // 记录到全局历史
-            db.ref('history').push({
-                name: pName,
-                server: sName,
-                type: "KICK",
-                detail: reason,
-                ts: Date.now()
-            });
+            const r = document.getElementById(`r-${sName}-${pName}`).value || "Policy Violation";
+            db.ref(`servers/${sName}/players/${pName}`).update({action: 'kick', reason: r});
+            db.ref('history').push({name: pName, server: sName, type: "KICK", detail: r, ts: Date.now()});
         }
 
         function toggleWindow() {

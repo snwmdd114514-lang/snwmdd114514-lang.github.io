@@ -12,16 +12,19 @@
         * { box-sizing: border-box; touch-action: pan-y; }
         body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
 
-        /* 登录 */
+        /* 登录框 */
         #login-section { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
         .login-box { background: #0a0a0a; padding: 40px; border-radius: 20px; border: 1px solid var(--border); width: 340px; text-align: center; }
-        .login-input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; margin-bottom: 12px; }
-        .login-btn { width: 100%; padding: 12px; border: none; background: #fff; font-weight: 900; border-radius: 10px; cursor: pointer; color: #000; }
+        .login-input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; margin-bottom: 12px; font-family: 'JetBrains Mono'; outline: none; }
+        .login-btn { width: 100%; padding: 12px; border: none; background: #fff; color: #000; font-weight: 900; border-radius: 10px; cursor: pointer; }
 
         /* 侧边栏 */
         .sidebar { width: 250px; background: var(--side); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; flex-shrink: 0; }
         #side-server-list { flex: 1; overflow-y: auto; margin: 10px 0; }
-        .nav-item { padding: 12px 15px; border-radius: 10px; cursor: pointer; margin-bottom: 5px; font-size: 13px; font-weight: 700; color: #555; display: flex; justify-content: space-between; align-items: center; }
+        #side-server-list::-webkit-scrollbar { width: 4px; }
+        #side-server-list::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
+
+        .nav-item { padding: 12px 15px; border-radius: 10px; cursor: pointer; margin-bottom: 5px; font-size: 13px; font-weight: 700; color: #555; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
         .nav-item:hover { background: var(--card); color: #fff; }
         .nav-item.active { background: var(--blue); color: #000; }
         .nav-item b { font-size: 10px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 10px; }
@@ -37,21 +40,21 @@
         .stat-card { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 18px; }
         .stat-card p { margin: 10px 0 0; font-size: 32px; font-weight: 900; }
 
-        /* 日志窗口 (支持移动端拖拽) */
-        #log-window { position: fixed; top: 100px; right: 20px; width: 380px; max-width: 90vw; height: 500px; background: #050505; border: 1px solid var(--border); border-radius: 20px; display: none; flex-direction: column; z-index: 1000; box-shadow: 0 40px 80px rgba(0,0,0,0.9); }
+        /* 日志窗口 (彻底修复拖拽) */
+        #log-window { position: fixed; top: 80px; right: 20px; width: 400px; max-width: 90vw; height: 500px; background: #050505; border: 1px solid var(--border); border-radius: 20px; display: none; flex-direction: column; z-index: 1000; box-shadow: 0 40px 80px rgba(0,0,0,0.8); }
         #log-header { padding: 20px; border-bottom: 1px solid var(--border); cursor: move; touch-action: none; display: flex; justify-content: space-between; align-items: center; font-weight: 900; }
         .log-body { flex: 1; overflow-y: auto; padding: 20px; font-size: 11px; font-family: 'JetBrains Mono'; }
-        .log-footer { padding: 15px; background: rgba(255,255,255,0.02); border-top: 1px solid var(--border); font-size: 10px; }
+        .log-footer { padding: 15px; background: rgba(255,255,255,0.02); border-top: 1px solid var(--border); font-size: 10px; color: #333; }
 
-        /* 日志颜色逻辑 */
-        .log-item { margin-bottom: 8px; border-left: 2px solid #222; padding-left: 10px; }
-        .log-join { color: var(--success) !important; border-color: var(--success); }
-        .log-leave, .log-kick { color: var(--accent) !important; border-color: var(--accent); }
+        /* 日志颜色区分 */
+        .log-join { color: var(--success) !important; border-left: 2px solid var(--success); padding-left: 8px; margin-bottom: 6px; }
+        .log-leave { color: var(--accent) !important; border-left: 2px solid var(--accent); padding-left: 8px; margin-bottom: 6px; }
+        .log-kick { color: #ffaa00 !important; border-left: 2px solid #ffaa00; padding-left: 8px; margin-bottom: 6px; }
 
         .player-row { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .reason-input { background: #000; border: 1px solid var(--border); color: #fff; padding: 8px; border-radius: 8px; width: 120px; }
-        .btn-kick { background: var(--accent); color: #fff; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 900; cursor: pointer; }
-        .log-trigger { background: #fff; color: #000; padding: 12px 20px; border-radius: 10px; font-weight: 900; border: none; cursor: pointer; margin-bottom: 30px; }
+        .reason-input { background: #000; border: 1px solid var(--border); color: #fff; padding: 8px 12px; border-radius: 8px; width: 140px; margin-right: 10px; outline: none; }
+        .btn-kick { background: var(--accent); color: #fff; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 900; cursor: pointer; }
+        .log-trigger { background: #fff; color: #000; padding: 12px 20px; border-radius: 12px; font-weight: 900; border: none; cursor: pointer; margin-bottom: 30px; }
     </style>
 </head>
 <body>
@@ -74,7 +77,7 @@
 
     <main class="main-content">
         <div id="view-dashboard" class="view active">
-            <h1 style="font-weight:900; font-size:38px; margin:0 0 10px 0;">Overview</h1>
+            <h1 style="font-weight:900; font-size:38px; margin:0 0 10px 0; letter-spacing:-1.5px;">Overview</h1>
             <button class="log-trigger" onclick="toggleLogs()">📋 AUDIT LOGS</button>
             <div class="stats-grid">
                 <div class="stat-card"><h3>GLOBAL ONLINE</h3><p id="stat-online" style="color:var(--success)">0</p></div>
@@ -85,13 +88,13 @@
         </div>
 
         <div id="view-server-detail" class="view">
-            <button onclick="switchView('dashboard')" style="background:none; border:none; color:var(--blue); font-weight:900; cursor:pointer; margin-bottom:15px;">← BACK</button>
+            <button onclick="switchView('dashboard')" style="background:none; border:none; color:var(--blue); cursor:pointer; font-weight:900; margin-bottom:15px;">← BACK</button>
             <h1 id="detail-server-name" style="font-weight:900; font-size:38px; margin:0 0 25px 0; color:var(--blue)">Server</h1>
             <div id="detail-player-list"></div>
         </div>
     </main>
 
-    <!-- 日志窗口 (修复拖拽与列表) -->
+    <!-- 日志窗口 -->
     <div id="log-window">
         <div id="log-header">
             <span>SYSTEM AUDIT</span>
@@ -99,8 +102,8 @@
         </div>
         <div class="log-body" id="log-body"></div>
         <div class="log-footer">
-            <b style="color:#444">PERMANENT DIRECTORY:</b><br>
-            <span id="user-directory" style="color:#666; font-size:9px;"></span>
+            <b style="color:#555">REGISTERED USER DIRECTORY:</b><br>
+            <span id="user-directory" style="color:#222; font-size:9px;">...</span>
         </div>
     </div>
 
@@ -114,33 +117,35 @@
             if(document.getElementById('user').value==='snmwdd' && document.getElementById('pass').value==='snmwddLLL'){
                 document.getElementById('login-section').style.display='none';
                 startHub();
-                initDraggable(document.getElementById('log-window'), document.getElementById('log-header'));
+                makeDraggable(document.getElementById('log-window'), document.getElementById('log-header'));
             } else { alert("ACCESS DENIED"); }
         }
 
         function startHub() {
+            // [修复] 即使没人的服务器也会渲染
             db.ref('servers').on('value', s => {
                 cachedServers = s.val() || {};
-                renderSidebar(); renderDashboard();
+                renderSidebar(); 
+                renderDashboard();
                 if(currentS) renderDetail(currentS);
             });
 
-            // 修复：永久玩家目录
+            // [修复] 用户目录列表
             db.ref('users').on('value', s => {
                 const users = s.val() || {};
                 document.getElementById('stat-users').innerText = Object.keys(users).length;
                 document.getElementById('user-directory').innerText = Object.keys(users).join(', ');
             });
 
-            // 修复：日志颜色与内容
-            db.ref('history').limitToLast(30).on('value', s => {
+            // [修复] 日志颜色逻辑
+            db.ref('history').limitToLast(40).on('value', s => {
                 const b = document.getElementById('log-body'); b.innerHTML = '';
                 Object.values(s.val()||{}).reverse().forEach(v => {
-                    const typeClass = v.type === 'JOIN' ? 'log-join' : (v.type === 'LEAVE' || v.type === 'KICK' ? 'log-leave' : '');
-                    b.innerHTML += `<div class="log-item ${typeClass}">
-                        <span style="opacity:0.4; font-size:9px;">[${new Date(v.ts).toLocaleTimeString()}]</span> 
-                        <b>${v.name}</b> ${v.type} <span style="opacity:0.3; font-size:9px;">@${v.server}</span>
-                    </div>`;
+                    let c = '';
+                    if(v.type==='JOIN') c='log-join';
+                    else if(v.type==='LEAVE') c='log-leave';
+                    else if(v.type==='KICK') c='log-kick';
+                    b.innerHTML += `<div class="${c}">[${new Date(v.ts).toLocaleTimeString()}] <b>${v.name}</b> ${v.type} <span style="opacity:0.3">@${v.server}</span></div>`;
                 });
             });
 
@@ -153,40 +158,6 @@
                     }
                 }
             }, 5000);
-        }
-
-        function renderDetail(s) {
-            document.getElementById('detail-server-name').innerText = s;
-            const c = document.getElementById('detail-player-list'); c.innerHTML = '';
-            const players = (cachedServers[s] || {}).players || {};
-            if(Object.keys(players).length === 0) { c.innerHTML = '<div style="color:#222">No active players.</div>'; return; }
-            for(let p in players) {
-                const row = document.createElement('div'); row.className = 'player-row';
-                row.innerHTML = `<div><b>${p}</b></div><div>
-                    <input id="r-${p}" class="reason-input" placeholder="Reason..." value="${inputCache[p]||""}" oninput="inputCache['${p}']=this.value">
-                    <button class="btn-kick" onclick="kick('${s}','${p}')">KICK</button>
-                </div>`;
-                c.appendChild(row);
-                db.ref('users/'+p).update({name:p, seen:Date.now()});
-            }
-        }
-
-        function kick(s, p) {
-            const r = document.getElementById('r-'+p).value || "Policy Violation";
-            db.ref(`servers/${s}/players/${p}`).update({ action: 'kick', reason: r });
-            db.ref('history').push({name:p, server:s, type:"KICK", ts:Date.now()});
-            inputCache[p] = "";
-        }
-
-        function toggleLogs() {
-            const w = document.getElementById('log-window');
-            w.style.display = w.style.display === 'flex' ? 'none' : 'flex';
-        }
-
-        function switchView(v, s = "") {
-            document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
-            document.getElementById('view-' + v).classList.add('active');
-            currentS = s; if(s) renderDetail(s);
         }
 
         function renderSidebar() {
@@ -210,32 +181,65 @@
                 online += pCount;
                 const d = document.createElement('div');
                 d.style = "background:var(--card); border:1px solid var(--border); padding:20px; border-radius:15px; cursor:pointer;";
-                d.innerHTML = `<div style="font-weight:900;">${s}</div><div style="font-size:10px; color:${pCount>0?'#00ff88':'#222'}">${pCount>0?'ACTIVE':'EMPTY'} (${pCount})</div>`;
+                d.innerHTML = `<div style="font-weight:900;">${s}</div><div style="font-size:10px; color:${pCount>0?'#00ff88':'#333'}">${pCount>0?'ACTIVE':'EMPTY'} (${pCount})</div>`;
                 d.onclick = () => switchView('server-detail', s);
                 g.appendChild(d);
             }
             document.getElementById('stat-online').innerText = online;
         }
 
-        // 修复：移动端与PC通用拖拽函数
-        function initDraggable(el, handle) {
-            let x = 0, y = 0, l = 0, t = 0, isDown = false;
+        function renderDetail(s) {
+            document.getElementById('detail-server-name').innerText = s;
+            const c = document.getElementById('detail-player-list'); c.innerHTML = '';
+            const players = (cachedServers[s] || {}).players || {};
+            for(let p in players) {
+                const row = document.createElement('div'); row.className = 'player-row';
+                const savedValue = inputCache[p] || "";
+                row.innerHTML = `<div><b>${p}</b></div><div>
+                    <input id="r-${p}" class="reason-input" placeholder="Reason..." value="${savedValue}" oninput="inputCache['${p}']=this.value">
+                    <button class="btn-kick" onclick="kick('${s}','${p}')">KICK</button>
+                </div>`;
+                c.appendChild(row);
+                db.ref('users/'+p).update({name:p, seen:Date.now()});
+            }
+        }
+
+        function kick(s, p) {
+            const r = document.getElementById('r-'+p).value || "Policy Violation";
+            db.ref(`servers/${s}/players/${p}`).update({ action: 'kick', reason: r });
+            db.ref('history').push({name:p, server:s, type:"KICK", ts:Date.now()});
+            inputCache[p] = ""; 
+        }
+
+        function switchView(v, s = "") {
+            document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
+            document.getElementById('view-' + v).classList.add('active');
+            currentS = s; if(s) renderDetail(s);
+        }
+
+        function toggleLogs() {
+            const w = document.getElementById('log-window');
+            w.style.display = w.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function makeDraggable(el, handle) {
+            let x = 0, y = 0, mx = 0, my = 0, isDown = false;
             const start = (e) => {
                 isDown = true;
-                const touch = e.type === 'touchstart' ? e.touches[0] : e;
-                x = touch.clientX; y = touch.clientY;
-                l = el.offsetLeft; t = el.offsetTop;
+                const t = e.type === 'touchstart' ? e.touches[0] : e;
+                mx = t.clientX; my = t.clientY;
+                x = el.offsetLeft; y = el.offsetTop;
             };
             const move = (e) => {
                 if (!isDown) return;
-                const touch = e.type === 'touchmove' ? e.touches[0] : e;
-                const dx = touch.clientX - x, dy = touch.clientY - y;
-                el.style.left = (l + dx) + 'px'; el.style.top = (t + dy) + 'px';
+                const t = e.type === 'touchmove' ? e.touches[0] : e;
+                const dx = t.clientX - mx, dy = t.clientY - my;
+                el.style.left = (x + dx) + 'px'; el.style.top = (y + dy) + 'px';
             };
-            const end = () => isDown = false;
+            const stop = () => isDown = false;
             handle.addEventListener('mousedown', start); handle.addEventListener('touchstart', start);
             window.addEventListener('mousemove', move); window.addEventListener('touchmove', move, { passive: false });
-            window.addEventListener('mouseup', end); window.addEventListener('touchend', end);
+            window.addEventListener('mouseup', stop); window.addEventListener('touchend', stop);
         }
     </script>
 </body>

@@ -149,17 +149,22 @@
                 });
             });
 
-            setInterval(() => {
-                const now = Math.floor(Date.now()/1000);
-                for(let s in cachedServers) {
-                    const players = cachedServers[s].players || {};
-                    for(let p in players) {
-                        if(now - players[p].lastHeartbeat > 15) db.ref(`servers/${s}/players/${p}`).remove();
-                    }
-                }
-            }, 5000);
-        }
+// 修改后的逻辑（增加判定时间，并增加前台检测）
+setInterval(() => {
+    if (document.hidden) return; // 如果网页在后台，直接跳过不执行清理操作
 
+    const now = Math.floor(Date.now()/1000);
+    for(let s in cachedServers) {
+        const players = cachedServers[s].players || {};
+        for(let p in players) {
+            // 将 15 秒改为更长的 60 秒，防止误删
+            if(players[p].lastHeartbeat && (now - players[p].lastHeartbeat > 60)) {
+                db.ref(`servers/${s}/players/${p}`).remove();
+            }
+        }
+    }
+}, 10000);
+}
         function renderSidebar() {
             const c = document.getElementById('side-server-list'); c.innerHTML = '';
             for(let s in cachedServers) {
